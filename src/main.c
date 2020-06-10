@@ -1,7 +1,12 @@
 #include <stdio.h>
 
-int main(int argc, char** argv){
+#include "process_audio.h"
+#include "sound_functions.h"
+
+int main(int argc, char *argv[]){
 	if (argc >= 2){
-		printf ("%s\n", argv[1]);
+		WAVE wav = read_wav(argv[1]);
+
+		debug_WAVE(wav);
 	}
 }
