@@ -2,3 +2,4 @@
 
 *.pdf
 *.sublime-workspace
+out/
