@@ -14,5 +14,6 @@ typedef struct WAVE{
 
 WAVE *read_wav(char *filename);
 void debug_WAVE(WAVE *wav);
+void playback(WAVE *wav);
 
 #endif // PROCESS_AUDIO_H

@@ -6,7 +6,7 @@
 #include "process_audio.h"
 
 WAVE *read_wav(char *filename){
-	// Open file for reading
+	// Open file for reading and if it failed tell the teacher.
 	FILE *fp = fopen(filename, "rb");
 	if (fp == NULL) return NULL;
 
@@ -15,8 +15,10 @@ WAVE *read_wav(char *filename){
 	int wav_size = ftell(fp);
 	rewind(fp);
 
-	// Allocate just enough memory to fit the file in, copy over and close the file
-	char *wav_file = malloc(wav_size + 1);
+	// Allocate enough memory to fit the file and allow checking the
+	// header without buffer overflow and copy over and close the file.
+	char *wav_file = malloc(wav_size + 44);
+	if (!wav_file) return NULL; // Sometimes, it won't fit in memory
 	fread(wav_file, 1, wav_size, fp);
 	fclose(fp);
 
@@ -29,6 +31,8 @@ WAVE *read_wav(char *filename){
 
 	// The output data structure
 	WAVE *ret = (WAVE*)malloc(sizeof(WAVE));
+	// Safety on the malloc. WAVE is pretty small so it's usually not an issue, but saftey first!
+	if (!ret) return NULL;
 
 	// Get some metadata
 	ret->name = filename;
@@ -51,9 +55,10 @@ WAVE *read_wav(char *filename){
 	return ret;
 }
 
-void playback(WAVE wav){
-	//for (int i; )
-	//putchar();
+// Terrible function for checking the validity of my read function
+void playback(WAVE *wav){
+	int num_bytes = (wav->num_channels)*(wav->num_samples)*(wav->bits_per_sample)/8;
+	fwrite(wav->data,1,num_bytes,stdout);
 }
 
 void debug_WAVE(WAVE *wav){
