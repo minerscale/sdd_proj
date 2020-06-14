@@ -20,6 +20,10 @@ int main(int argc, char *argv[]){
 		float *data_float_c1 = WAVE_to_float(wav, 1);
 
 		float *channel_data[] = {data_float_c0,data_float_c1};
+
+		sort_audio(wav->num_samples, data_float_c0);
+		sort_audio(wav->num_samples, data_float_c1);
+		
 		char *raw_data = float_to_raw(wav->num_samples,wav->num_channels,channel_data);
 
 		free(data_float_c0);
