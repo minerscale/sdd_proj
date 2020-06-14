@@ -12,7 +12,7 @@ typedef struct WAVE{
 	char     *data;
 } WAVE;
 
-WAVE read_wav(char *filename);
-void debug_WAVE(WAVE wav);
+WAVE *read_wav(char *filename);
+void debug_WAVE(WAVE *wav);
 
 #endif // PROCESS_AUDIO_H
