@@ -15,9 +15,16 @@ int main(int argc, char *argv[]){
 			throw(errno);
 			return errno;
 		}
-		playback(wav);
-		printf("sex\n");
-		//debug_WAVE(wav);
+
+		float *float_data = raw_to_float(wav, 0);
+		if (float_data == NULL){
+			throw(errno);
+			return errno;
+		}
+		//playback(wav);
+		debug_WAVE(wav);
+
+		destroy_WAVE(wav);
 	}
 	// If we haven't supplied an argument print the help.
 	else {
