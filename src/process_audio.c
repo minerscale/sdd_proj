@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+
 #include "process_audio.h"
 
 WAVE *read_wav(char *filename){
@@ -68,7 +69,7 @@ void destroy_WAVE(WAVE *wav){
 
 // Convert raw WAVE struct to a more usable array of floats. NULL if out of memory.
 // Channel is the channel to convert, undefined behaviour results if the channel selector is too high.
-float *raw_to_float(WAVE *wav, int channel){
+float *WAVE_to_float(WAVE *wav, int channel){
 	// Extract the data to avoid having to dereference the pointers once per loop.
 	int num_samples = wav->num_samples;
 	int num_channels = wav->num_channels;
@@ -115,6 +116,50 @@ float *raw_to_float(WAVE *wav, int channel){
 	return ret;
 }
 
+// 16 bit WAV export supported only because I'm lazy.
+char *float_to_raw(int num_samples, int num_channels, float **data){
+	int16_t *ret = malloc(num_samples*num_channels*sizeof(int16_t));
+	if (!ret) return NULL;
+
+	for (int i = 0; i < num_samples; ++i){
+		for (int j = 0; j < num_channels; ++j){
+			ret[num_channels*i + j] = 32767*data[j][i];
+		}
+	}
+	return (char *)ret;
+}
+
+int export_WAVE(WAVE *wav){
+	char *wav_header = malloc(44);
+	if (!wav_header) return errno;
+	// Write a scaffold of the data to memory.
+	memcpy(wav_header, "RIFF    WAVEfmt                     data", 40);
+
+	// Populate empty parts
+	((int32_t *)wav_header)[1] = 36 + (wav->num_samples)*(wav->num_channels)*(wav->bits_per_sample/8);
+	((int32_t *)wav_header)[4] = 16;
+	((int16_t *)wav_header)[10] = 1;
+	((int16_t *)wav_header)[11] = wav->num_channels;
+	((int32_t *)wav_header)[6] = wav->sample_rate;
+	((int32_t *)wav_header)[7] = (wav->sample_rate)*(wav->num_channels)*(wav->bits_per_sample/8);
+	((int16_t *)wav_header)[16] = (wav->num_channels)*(wav->bits_per_sample/8);
+	((int16_t *)wav_header)[17] = wav->bits_per_sample;
+	((int32_t *)wav_header)[10] = (wav->num_samples)*(wav->num_channels)*(wav->bits_per_sample/8);
+
+	// Write to the file.
+	FILE *fp = fopen (wav->name, "wb");
+	if (!fp) return errno;
+	fwrite(wav_header, 1, 44, fp);
+	fwrite(wav->data, 1, (wav->num_samples)*(wav->num_channels)*sizeof(int16_t), fp);
+	fclose(fp);
+
+	// Free up unused memory.
+	free(wav_header);
+
+	// Return a success.
+	return 0;
+}
+
 // Terrible function for checking the validity of my read function
 void playback(WAVE *wav){
 	int num_bytes = (wav->num_channels)*(wav->num_samples)*(wav->bits_per_sample)/8;
@@ -127,9 +172,4 @@ void debug_WAVE(WAVE *wav){
 	printf ("sample_rate: %d\n", wav->sample_rate);
 	printf ("bits_per_sample: %d\n", wav->bits_per_sample);
 	printf ("num_samples: %d\n", wav->num_samples);
-}
-
-int process_audio(char *filename){
-	// This page is a stub.
-	return 0;
 }

@@ -17,6 +17,8 @@ WAVE *read_wav(char *filename);
 void debug_WAVE(WAVE *wav);
 void playback(WAVE *wav);
 void destroy_WAVE(WAVE *wav);
-float *raw_to_float(WAVE *wav, int channel);
+float *WAVE_to_float(WAVE *wav, int channel);
+char *float_to_raw(int num_samples, int num_channels, float **data);
+int export_WAVE(WAVE *wav);
 
 #endif // PROCESS_AUDIO_H
