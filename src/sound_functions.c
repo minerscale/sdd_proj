@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include <math.h>
 #include "sound_functions.h"
 
 int float_compare_function(const void *a,const void *b) {
@@ -14,4 +14,10 @@ int float_compare_function(const void *a,const void *b) {
 // In place sort the audio
 void sort_audio(int num_samples, float *data){
 	qsort(data, num_samples, sizeof(float), float_compare_function);
+}
+
+void squre_root(int num_samples, float *data){
+	for (int i = 0; i < num_samples; ++i){
+		data[i] = sqrtf(data[i]);
+	}
 }
