@@ -16,8 +16,10 @@ void sort_audio(int num_samples, float *data){
 	qsort(data, num_samples, sizeof(float), float_compare_function);
 }
 
-void squre_root(int num_samples, float *data){
+void square_root(int num_samples, float *data){
 	for (int i = 0; i < num_samples; ++i){
-		data[i] = sqrtf(data[i]);
+		data[i] = powf(data[i],1/10.0);
 	}
 }
+
+void (*function_table[2])(int, float *) = {sort_audio, square_root};

@@ -1,4 +1,5 @@
 TARGET = out/sdd_proj
+# CC = x86_64-w64-mingw32-gcc
 CC = gcc
 MAKE = make
 CFLAGS = -Wall -Iinc -flto -lm
@@ -29,7 +30,8 @@ out/%.o: %.c $(HEADERS) | $(PREBUILD_DIRS)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $^ $(CFLAGS) -o $@
-	$(CHMOD) +x $@
+	$(CHMOD) -f +x $@ || true
+	$(CHMOD) -f +x $@.exe || true
 
 run: $(TARGET)
 	$(TARGET)

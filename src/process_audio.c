@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+#include <sound_functions.h>
 
 #include "process_audio.h"
 
@@ -96,7 +97,8 @@ float *WAVE_to_float(WAVE *wav, int channel){
 		case 24:
 			for (int i = 0; i < num_samples; ++i){
 				int base_ptr = 3*(i*num_channels + channel);
-				ret[i] = (((wav->data[base_ptr] << 24) | (wav->data[base_ptr + 3] << 16) | (wav->data[base_ptr + 6] << 8)) >> 8)/8388607.0;
+				ret[i] = (((wav->data[base_ptr] << 24) | (wav->data[base_ptr + 3] << 16) | 
+					     (wav->data[base_ptr + 6] << 8)) >> 8)/8388607.0;
 
 			}
 			break;
@@ -150,6 +152,7 @@ int export_WAVE(WAVE *wav){
 	FILE *fp = fopen (wav->name, "wb");
 	if (!fp) return errno;
 	fwrite(wav_header, 1, 44, fp);
+
 	fwrite(wav->data, 1, (wav->num_samples)*(wav->num_channels)*sizeof(int16_t), fp);
 	fclose(fp);
 
@@ -172,4 +175,30 @@ void debug_WAVE(WAVE *wav){
 	printf ("sample_rate: %d\n", wav->sample_rate);
 	printf ("bits_per_sample: %d\n", wav->bits_per_sample);
 	printf ("num_samples: %d\n", wav->num_samples);
+}
+
+// wav_in must have same basic metadata as wav_out.
+int process_audio(WAVE *wav_in, WAVE *wav_out, int function){
+	float **data_f = malloc(sizeof(float*) * wav_in->num_channels);
+
+	for (int i = 0; i < wav_in->num_channels; ++i){
+		data_f[i] = WAVE_to_float(wav_in, i);
+		function_table[function](wav_in->num_samples, data_f[i]);
+	}
+	
+	char *raw_data = float_to_raw(wav_in->num_samples, wav_in->num_channels, data_f);
+
+	for (int i = 0; i < wav_in->num_channels; ++i){
+		free (data_f[i]);
+	}
+	free(data_f);
+
+	wav_out->bits_per_sample = 16;
+	wav_out->num_samples = wav_in->num_samples;
+	wav_out->sample_rate = wav_in->sample_rate;
+	wav_out->num_channels = wav_in->num_channels;
+	wav_out->base_ptr = raw_data;
+	wav_out->data = raw_data;
+
+	return 0;
 }
