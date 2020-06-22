@@ -20,7 +20,6 @@ void destroy_WAVE(WAVE *wav);
 float *WAVE_to_float(WAVE *wav, int channel);
 char *float_to_raw(int num_samples, int num_channels, float **data);
 int export_WAVE(WAVE *wav);
-
 int process_audio(WAVE *wav_in, WAVE *wav_out, int function);
 
 #endif // PROCESS_AUDIO_H

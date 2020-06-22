@@ -187,6 +187,9 @@ int process_audio(WAVE *wav_in, WAVE *wav_out, int function){
 	}
 	
 	char *raw_data = float_to_raw(wav_in->num_samples, wav_in->num_channels, data_f);
+	if (raw_data == NULL){
+		return errno;
+	}
 
 	for (int i = 0; i < wav_in->num_channels; ++i){
 		free (data_f[i]);

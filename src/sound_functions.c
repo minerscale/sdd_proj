@@ -22,4 +22,13 @@ void square_root(int num_samples, float *data){
 	}
 }
 
-void (*function_table[2])(int, float *) = {sort_audio, square_root};
+void reverse(int num_samples, float *data){
+	float tmp = 0.0f;
+	for (int i = 0; i < num_samples/2; ++i){
+		tmp = data[i];
+		data[i] = data[num_samples - i - 1];
+		data[num_samples - i - 1] = tmp;
+	}
+}
+
+void (*function_table[3])(int, float *) = {sort_audio, square_root, reverse};

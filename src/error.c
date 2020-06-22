@@ -5,7 +5,8 @@
 
 char *errors[] = {
 	"Invalid .wav file.",
-	"Unsupported .wav format."
+	"Unsupported .wav format.",
+	"Invalid function index."
 };
 
 void throw(int error){
