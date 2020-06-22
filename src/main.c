@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
 	// If we haven't supplied an argument print the help.
 	else {
 		printf("Usage: %s ACTION SOURCE DEST\n"
-			   "possible values for ACTION:\n"
+			   "Possible values for ACTION:\n"
 			   "    1: quicksort the data\n"
 			   "    2: sqrt the data\n"
 			   "    3: reverse the data\n"

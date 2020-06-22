@@ -183,6 +183,9 @@ int process_audio(WAVE *wav_in, WAVE *wav_out, int function){
 
 	for (int i = 0; i < wav_in->num_channels; ++i){
 		data_f[i] = WAVE_to_float(wav_in, i);
+		if (data_f[i] == NULL){
+			return errno;
+		}
 		function_table[function](wav_in->num_samples, data_f[i]);
 	}
 	
