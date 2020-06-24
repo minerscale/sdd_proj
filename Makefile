@@ -1,4 +1,4 @@
-TARGET = out/sdd_proj
+TARGET = out/wavver
 # CC = x86_64-w64-mingw32-gcc
 CC = gcc
 MAKE = make

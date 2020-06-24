@@ -1,7 +1,5 @@
 # SDD Major Project
 
-
-
 ![man](./img/man.png)
 
 **Table Of Contents:**
@@ -30,13 +28,27 @@ I think I'm going to use an open source licence. I don't see the reason of using
 
 I decided to use [draw.io](https://draw.io) for my modelling diagrams because it produces good looking graphs with a wonderful interface. Compared to handwritten documents an undo button and the ability to adjust arrows once they are put down make the whole process of producing a structure chart or DFD much more streamlined.
 
-### DFD
+### Context Diagram
+
+![DFD](/home/aaron/programming/sdd_proj/doc/img/context.png)
+
+### Level I DFD
 
 ![DFD](/home/aaron/programming/sdd_proj/doc/img/DFD.png)
+
+### Level II DFD
+
+![DFD](/home/aaron/programming/sdd_proj/doc/img/DFDII.png)
 
 ### Structure Chart
 
 ![structure_chart](/home/aaron/programming/sdd_proj/doc/img/structure_chart.png)
+
+### IPO Chart
+
+| **Input**                       | **Process**                                                  | **Output**                                 |
+| ------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
+| Infile<br />Outfile<br />Option | Open the infile and read the data into a structure.<br />Convert the data to floating point data to more easily edit it.<br />Modify the data.<br />Convert it back to a bytestring.<br />Write it back to a file. | Modified File<br />Potential Error Message |
 
 <div style="page-break-after: always;"><marquee>--- LINE BREAK ---</marquee></div>
 
@@ -44,7 +56,91 @@ I decided to use [draw.io](https://draw.io) for my modelling diagrams because it
 
 ## Algorithms
 
-Beepyboopy dumdum algorithms
+### Pseudocode
+
+Note: These code blocks don't support underlining as they only take plaintext. I've used double underlines on either side of the function as a stand in for this feature.
+
+```
+BEGIN Main(infile, outfile, option)
+	Let wav = __ReadWav__(infile)
+	Let wavOut = empty wav object with name outfile
+	__ProcessAudio__(wav, wavOut, option)
+	__ExportWave__(wavOut)
+END Main
+
+===============================================================================
+
+BEGIN ReadWav(filename)
+	Let wav = empty wav object with name filename
+	Let wavFile = byte data read in by the file pointed to by filename
+	Let wav.numChannels = wavFile[22] (22nd byte as a 16 bit int)
+	Let wav.sampleRate = wavFile[24] (24th byte as a 32 bit int)
+	Let wav.bitsPerSample = wavFile[34] (34th byte as 16 bit int)
+	
+	Let dataPointer = byte pointing to the data block in the wav file
+	Let wav.numSamples = wavFile[dataPointer + 4] / ((wav.bitsPerSample / 8) * wav.numChannels)
+	Let wav.dataPointer = dataPointer + 8
+	
+	RETURN wav
+END ReadWav
+
+===============================================================================
+
+BEGIN ProcessAudio(wavIn, wavOut, option)
+	Let floatData = empty two dimentional array of size wavIn.numChannels by wavIn.numSamples
+	FOR i = 0 TO wavIn.numChannels STEP 1
+		floatData[i] = __WaveToFloat__(WavIn, i)
+		floatData[i] = ProcessingFunctions[option](floatData[i]) <- list of functions!
+	NEXT i
+	wavOut.data = __FloatToRaw__(wavIn.numSamples, wavIn.numChannels, floatData)
+	
+	set wavOut's metadata to the same as wavIn's
+	
+	RETURN wavOut
+END ProcessAudio
+
+===============================================================================
+
+BEGIN WaveToFloat(wav, channel)
+	Let floatData = array of floats of size wav.numChannels
+	
+	CASEWHERE wav.bitsPerSample is
+		8:  floatData = wav.data taken one byte at a time from interleaved channels
+		16: floatData = wav.data taken two bytes at a time from interleaved channels
+		24: floatData = wav.data taken three bytes at a time from interleaved channels
+		32: floatData = wav.data taken four byte at a time from interleaved channels
+	ENDCASE
+
+	RETURN floatData
+END WaveToFloat
+
+===============================================================================
+
+BEGIN FloatToRaw(numSamples, numChannels, floatData)
+	Let rawData = array of bytes of size numSamples * numChannels
+	FOR i = 0 TO numSamples STEP 1
+		FOR j = 0 TO numChannels STEP 1
+			rawData[numChannels*i + j] = (2^15 - 1)*floatData[j][i]
+		NEXT j
+	NEXT i
+	
+	RETURN rawData
+END FloatToRaw
+
+===============================================================================
+
+BEGIN ExportWave(wav)
+	write the header and wav file data to a file named wav.name
+END ExportWave
+```
+
+### Flowcharts
+
+![structure_chart](/home/aaron/programming/sdd_proj/doc/img/Main.png)
+
+
+
+![structure_chart](/home/aaron/programming/sdd_proj/doc/img/ProcessAudio.png)
 
 ## Selection of Language to be used
 
@@ -64,7 +160,7 @@ I like Python a lot. I think it is particularly well suited to the end-user frie
 ### C
 
 - Difficult to write, with static types and pointers.
-- Mostly cross platform. One must be careful about which functions inC is a pain. I do enjoy it's syntactic simplicity at the expense of it's low-levelness, d the standard library are supported on Windows.
+- Mostly cross platform. One must be careful about which functions in C is a pain. I do enjoy it's syntactic simplicity at the expense of it's low-levelness, d the standard library are supported on Windows.
 - Produces standalone binaries, ideal for production code.
 - One of the fastest programming languages under the sun if worked with correctly.
 - Manipulation of binary data is done in the same way normal data is dealt with: on a low level.

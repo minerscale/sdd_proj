@@ -29,8 +29,9 @@ int main(int argc, char *argv[]){
 
 		// Convert the input string into an integer
 		int function_index = atoi(argv[1]);
+		
 		// If it's too big complain and exit
-		if (function_index > 3 || function_index <= 0){
+		if (function_index > 4 || function_index <= 0){
 			throw(-3);
 			return -3;
 		}
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]){
 			   "    1: quicksort the data\n"
 			   "    2: sqrt the data\n"
 			   "    3: reverse the data\n"
+			   "    4: make the data all steppy and weird\n"
 			   "Example: %s 1 in.wav out.wav\n", argv[0], argv[0]);
 	}
 }

@@ -11,6 +11,7 @@ As of now there are 3 different functions that Wavver can do, however feel free 
 1: quicksort the data
 2: sqrt the data
 3: reverse the data
+4: make the data all steppy and weird
 
 -- Linux --
 Fire up a terminal, run:
