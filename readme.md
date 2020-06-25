@@ -24,7 +24,7 @@ Fire up a terminal, run:
 
 ### Windows
 
-Start up cmd, navigate to the directory with Wavver in it and run:
+Start up cmd (windows key + R, cmd, enter) and navigate to the directory with Wavver in it and run:
 
 ```
 wavver.exe 1 in.wav out.wav

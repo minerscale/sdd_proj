@@ -6,8 +6,6 @@
 
 [TOC]
 
-<div style="page-break-after: always;"><marquee>--- LINE BREAK ---</marquee></div>
-
 # Defining and Understanding the Problem
 
 ## The Problem
@@ -30,7 +28,7 @@ I decided to use [draw.io](https://draw.io) for my modelling diagrams because it
 
 ### Context Diagram
 
-![DFD](/home/aaron/programming/sdd_proj/doc/img/context.png)
+![DFD](img/context.png)
 
 ### Level I DFD
 
@@ -38,19 +36,17 @@ I decided to use [draw.io](https://draw.io) for my modelling diagrams because it
 
 ### Level II DFD
 
-![DFD](/home/aaron/programming/sdd_proj/doc/img/DFDII.png)
+![DFD](img/DFDII.png)
 
 ### Structure Chart
 
-![structure_chart](/home/aaron/programming/sdd_proj/doc/img/structure_chart.png)
+![structure_chart](img/structure_chart.png)
 
 ### IPO Chart
 
 | **Input**                       | **Process**                                                  | **Output**                                 |
 | ------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
 | Infile<br />Outfile<br />Option | Open the infile and read the data into a structure.<br />Convert the data to floating point data to more easily edit it.<br />Modify the data.<br />Convert it back to a bytestring.<br />Write it back to a file. | Modified File<br />Potential Error Message |
-
-<div style="page-break-after: always;"><marquee>--- LINE BREAK ---</marquee></div>
 
 # Planning and Design of Software Solutions
 
@@ -136,11 +132,11 @@ END ExportWave
 
 ### Flowcharts
 
-![structure_chart](/home/aaron/programming/sdd_proj/doc/img/Main.png)
+![structure_chart](img/Main.png)
 
 
 
-![structure_chart](/home/aaron/programming/sdd_proj/doc/img/ProcessAudio.png)
+![structure_chart](img/ProcessAudio.png)
 
 ## Selection of Language to be used
 
@@ -171,4 +167,117 @@ C is a pain. I do enjoy it's syntactic simplicity at the expense of it's low-lev
 # Implementation of Software Solutions
 
 ## Interface Design
+
+My interface I have decided due to time constraints to be for the command line. I want the syntax to look like this:
+
+```bash
+$ [PROGRAM] [OPTION] [INFILE] [OUTFILE]
+```
+
+If the number of arguments is incorrect we should print the program's help message which looks like this in C:
+
+```C
+printf("Usage: %s ACTION SOURCE DEST\n"
+	   "Possible values for ACTION:\n"
+	   "    1: quicksort the data\n"
+	   "    2: sqrt the data\n"
+	   "    3: reverse the data\n"
+	   "    4: make the data all steppy and weird\n"
+	   "Example: %s 1 in.wav out.wav\n", argv[0], argv[0]);
+```
+
+If the option is invalid or the source file is incorrect or we cannot write to the destination file then we should print an error message as follows:
+
+```
+Error: [ERROR MESSAGE]
+```
+
+If the operation was successful we simply print nothing to the screen and the shiny new file will be sitting there.
+
+The interface is consistent through it's close relationship with other command line tools such as `cp`, which copies files or `touch` which will create a new file if it doesn't exist or if it does updates the date of modification. These programs take simple positional arguments and when successful return nothing.
+
+My target audience is me. I'm very proficient with the command line to the point where a GUI would actually slow me down. As a result, a GUI is not only difficult but also a thankless task, as I wouldn't even use it.
+
+## Project Log
+
+### Date I
+
+### Date II
+
+### Date III
+
+Meeting
+
+# Testing and Evaluation of Software Solutions
+
+## Testing the software solution
+
+I feel like this solution is a pretty good one for the specifications I set out to achieve. I'm yet to find a bug with the finished version so far and it does what I want it to do with modularity, allowing for the easy addition of other, perhaps more complicated audio manipulation functions. I asked both Joon and Felix from year 10 to try to use and break my software using various inputs - such as invalid wav files, empty wav files, invalid options, invalid output files, attempting to write the executable to itself.
+
+What I found was that they could figure out the usage of my software from the help message easily (after I did the readme's job of telling them to fire up a terminal) and the design was very user-friendly. I made sure to test each function as I made them using a variety of methods: Using printf to tell me where parts of the program was failing, writing small programs to explicitly test individual programs and writing test functions to make it easier to tell what has gone wrong. I also performed tests of the whole program where applicable, downloading many different WAV files in different formats to test each and every branch of my functions to make sure each line of code was working correctly.
+
+```C
+// Terrible function for checking the validity of my read function
+void playback(WAVE *wav){
+	int num_bytes = (wav->num_channels)*(wav->num_samples)*(wav->bits_per_sample)/8;
+	fwrite(wav->data,1,num_bytes,stdout);
+}
+
+void debug_WAVE(WAVE *wav){
+	printf ("name: %s\n", wav->name);
+	printf ("num_channels: %d\n", wav->num_channels);
+	printf ("sample_rate: %d\n", wav->sample_rate);
+	printf ("bits_per_sample: %d\n", wav->bits_per_sample);
+	printf ("num_samples: %d\n", wav->num_samples);
+}
+```
+
+**Original:**
+
+<audio controls="controls">
+	<source type="audio/wav" src="audio/test.wav"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
+**Square Root**
+
+<audio controls="controls">
+	<source type="audio/wav" src="audio/sqrt.wav"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
+
+**Reverse**
+
+<audio controls="controls">
+	<source type="audio/wav" src="audio/reverse.wav"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
+
+**Quicksort** (it is expected that it sounds like nothing)
+
+<audio controls="controls">
+	<source type="audio/wav" src="audio/qsort.wav"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
+
+**Step**
+
+<audio controls="controls">
+	<source type="audio/wav" src="audio/step.wav"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
+
+I also tried a longer file (37MB!) also rate my Minecraft song I put a lot of work into it.
+
+**Original**
+
+<audio controls="controls">
+	<source type="audio/mp3" src="audio/minecraft.mp3"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
+**Reversed**
+
+<audio controls="controls">
+	<source type="audio/mp3" src="audio/minecraft-reverse.mp3"></source>
+	<p>Your browser does not support the audio element.</p>
+</audio>
 
