@@ -2,18 +2,15 @@
 
 ![man](./img/man.png)
 
-
-
 <center><b>Source Code: <a href="https://github.com/minerscale/sdd_proj">https://github.com/minerscale/sdd_proj</a><br>
 Binaries: <a href="https://github.com/minerscale/sdd_proj/releases/tag/v1.0">https://github.com/minerscale/sdd_proj/releases/tag/v1.0</a>
 </b>
 </center> 
 
-
-
 **Table Of Contents:**
 
-[TOC]
+* TOC
+{:toc}
 
 # Defining and Understanding the Problem
 
@@ -41,7 +38,7 @@ I decided to use [draw.io](https://draw.io) for my modelling diagrams because it
 
 ### Level I DFD
 
-![DFD](/home/aaron/programming/sdd_proj/doc/img/DFD.png)
+![DFD](img/DFD.png)
 
 ### Level II DFD
 
@@ -591,7 +588,7 @@ void step(int num_samples, float *data){
 
 # Testing and Evaluation of Software Solutions
 
-## Testing the software solution
+## Testing the software solution & End User Testing
 
 I feel like this solution is a pretty good one for the specifications I set out to achieve. I'm yet to find a bug with the finished version so far and it does what I want it to do with modularity, allowing for the easy addition of other, perhaps more complicated audio manipulation functions. I asked both Joon and Felix from year 10 to try to use and break my software using various inputs - such as invalid wav files, empty wav files, invalid options, invalid output files, attempting to write the executable to itself.
 
@@ -625,24 +622,32 @@ void debug_WAVE(WAVE *wav){
 	<source type="audio/wav" src="audio/sqrt.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
+This kind of distortion is to be expected, as when taking the square root of the data, the negative component disappears and the rest of the data becomes distorted. Another feature is that it should get louder, because the square root of a number between 0 and 1 is bigger than the number itself, e.g. sqrt(0.5) = 0.707, which is bigger than 1/2.
+
 **Reverse**
 
 <audio controls="controls">
 	<source type="audio/wav" src="audio/reverse.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
-**Quicksort** (it is expected that it sounds like nothing)
+Okay, not sure what you'd expect here but I'm pretty sure that's it.
+
+**Quicksort**
 
 <audio controls="controls">
 	<source type="audio/wav" src="audio/qsort.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
+it is expected that it sounds like nothing, putting it into Audacity confirms that it did indeed sort the audio by speaker position.
+
 **Step**
 
 <audio controls="controls">
 	<source type="audio/wav" src="audio/step.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
+Again, you expect a kind of bitcrushed effect, which we hear!
+
 
 I also tried a longer file (37MB!) also rate my Minecraft song I put a lot of work into it.
 
@@ -658,4 +663,26 @@ I also tried a longer file (37MB!) also rate my Minecraft song I put a lot of wo
 	<source type="audio/mp3" src="audio/minecraft-reverse.mp3"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
+Works great. I think this software is ready to ship.
+
+# Time Info
+
+According to Toggl, I spent approximately 26 hours, 52 minutes and 15 seconds on this project. I would imagine at least 6 of those hours were distracted time however bringing it down to probably a more accurate 21 hours. I wouldn't consider that too bad for a month long project. To be averaging about 30-40 minutes a day isn't too tricky.
+
+![image-20200625225644174](img/toggl.png)
+
+I spent a total of about 3 hours defining and understanding the problem, 6 or so hours on the Design Specifications (creating flowcharts etc.), 14 hours on the implementation of software solutions, which was pretty much programming and writing those process diary entries. And lastly 3 or 4 hours on testing the software, talking to people about it's functionality and stuff making it look all nice.
+
+## Why Toggl?
+
+Because it's what the task said and I didn't care much for comparing other solutions when Ms Hadley suggested a perfectly good solution for us.
+
+# Source Code
+
+<center><b>Source Code: <a href="https://github.com/minerscale/sdd_proj">https://github.com/minerscale/sdd_proj</a><br>
+Binaries: <a href="https://github.com/minerscale/sdd_proj/releases/tag/v1.0">https://github.com/minerscale/sdd_proj/releases/tag/v1.0</a>
+</b>
+</center> 
+
+Thanks for watching - Aaron
 
