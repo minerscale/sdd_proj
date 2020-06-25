@@ -2,6 +2,15 @@
 
 ![man](./img/man.png)
 
+
+
+<center><b>Source Code: <a href="https://github.com/minerscale/sdd_proj">https://github.com/minerscale/sdd_proj</a><br>
+Binaries: <a href="https://github.com/minerscale/sdd_proj/releases/tag/v1.0">https://github.com/minerscale/sdd_proj/releases/tag/v1.0</a>
+</b>
+</center> 
+
+
+
 **Table Of Contents:**
 
 [TOC]
@@ -200,13 +209,385 @@ My target audience is me. I'm very proficient with the command line to the point
 
 ## Project Log
 
-### Date I
+### 10/06/2020
 
-### Date II
+I'm now getting to starting work on the actual programming! I started out by configuring my development environment: creating a src folder for my source files, a doc folder for my documentation, a readme and a sublime-project file so I could easily load and manipulate the project in sublime text, my text editor of choice. I then went on to create a Makefile so I could easily build my program in one simple command. I wrote the beginnings of `error.c`, `main.c`, `process_audio.c` and `sound_functions.c` with a focus on getting WAV reading capabilities fully functional. The file `main.c` contained code simply to test the `read_wav` function I created. Here's an excerpt:
 
-### Date III
+```C
+#include <stdio.h>
 
-Meeting
+#include "process_audio.h"
+#include "sound_functions.h"
+
+int main(int argc, char *argv[]){
+	if (argc >= 2){
+		WAVE wav = read_wav(argv[1]);
+
+		debug_WAVE(wav);
+	}
+}
+```
+
+Where `debug_WAVE` is a function which will print a bunch of information about the wav object for testing purposes:
+
+```C
+void debug_WAVE(WAVE wav){
+	printf ("name: %s\n", wav.name);
+	printf ("num_channels: %d\n", wav.num_channels);
+	printf ("sample_rate: %d\n", wav.sample_rate);
+	printf ("bits_per_sample: %d\n", wav.bits_per_sample);
+	printf ("num_samples: %d\n", wav.num_samples);
+}
+```
+
+The `read_wav` function itself I wrote in a well commented way which follows the psuedocode quite closely, with some concessions created by the fact I was using C and that it is much more low level. Here is that function:
+
+```C
+WAVE read_wav(char *filename){
+	// The output data structure
+	struct WAVE ret;
+
+	// Open file for reading
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL) throw("could not open file for reading", 2);
+
+	// Find the length of the file
+	fseek(fp, 0L, SEEK_END);
+	int wav_size = ftell(fp);
+	rewind(fp);
+
+	// Allocate just enough memory to fit the file in, copy over and close the file
+	char *wav_file = malloc(wav_size + 1);
+	fread(wav_file, 1, wav_size, fp);
+	fclose(fp);
+
+	// Check if the file is actually a WAV file.
+	if (strncmp("WAVE", wav_file + 8, 4) != 0) throw("invalid .wav file", 3);
+
+	// I only want to support WAV files with no compression. Otherwise it is way too much work.
+	if (*((uint16_t*)(wav_file + 20)) != 1) throw("invalid .wav file", 3);
+
+	// Get some metadata
+	ret.name = filename;
+	ret.num_channels = *((uint16_t*)(wav_file + 22));
+	ret.sample_rate = *((uint32_t*)(wav_file + 24));
+	ret.bits_per_sample = *((uint16_t*)(wav_file + 34));
+	
+	// Search through the chunks until we find the 'data' chunk, usually it's first, but just to be safe.
+	int wp = 36;
+	while (strncmp("data", wav_file + wp, 4) != 0) {
+		wp += 8 + (*((uint32_t*)(wav_file + 4)));
+		if (wp > wav_size) throw("invalid .wav file", 3);
+	}
+
+	// Get the total number of samples and add a pointer to the data itself to the data structure.
+	// A benefit of this is that we only have to load the file into memory once!
+	ret.num_samples = (*((uint32_t*)(wav_file + wp + 4)))/((ret.bits_per_sample/8) * ret.num_channels);
+	ret.data = wav_file + wp + 8;
+
+	return ret;
+}
+```
+
+An `throw` function was also created for error handling, which is essential when dealing with completely arbitrary input to a program. Here is that:
+
+```C
+#include <stdio.h>
+#include <stdlib.h>
+void throw(char *msg, int code) {
+	fprintf(stderr, "Error: %s\n", msg);
+	exit(code);
+}
+```
+
+I also created a quick stub for the `process_audio` function which I will be fleshing out later:
+
+```C
+int process_audio(char *filename){
+	return 0;
+}
+```
+
+### 11/06/2020
+
+I had my progress meeting today. I went in with the expectation to be told what was and wasn't a good idea with the code for my program with to best practices and what is best for the course. I also wanted to see where I was up to with my documentation.
+
+What Ms Hadley and I talked about most was the structure of my code, specifically pertaining to exiting the program in 'random' points due to errors. Ms Hadley felt as if it was spaghetti code and not best practice, and on top of that difficult to implement under a top-down model. I tend to agree with her but I'm finding it difficult to come up with an alternative that works well. I'm sure I'll figure it out. The specific code in question was to do with how the `throw` function worked and how it was called at multiple points from multiple functions. Here is an example:
+
+```C
+// Open file for reading
+FILE *fp = fopen(filename, "rb");
+if (fp == NULL) throw("could not open file for reading", 2);
+```
+
+Since the `throw` function quits the program, it could be seen that our soul exit point for the program is not the `main` function, and thus not adhering to the 'top down development' principles which we should be following.
+
+Hopefully I'll have a solution soon.
+
+### 14/06/2020
+
+I think I've come up with a good solution to the `throw` function now. Instead of calling a `throw` function from anywhere, the error is passed using the global variable `errno` (implemented by C itself, *not* me). The error, once daisy chained back to the `main` function can be safely passed to a new throw routine which allows for the printing of all sorts of different system errors using `perror` (i.e. running out of memory, unable to open files for reading, etc.) whilst also allowing me to implement custom errors for when wav files are unsupported (as in files which are in a really weird format) or invalid. The function looks like this:
+
+```C
+char *errors[] = {
+	"Invalid .wav file.",
+	"Unsupported .wav format."
+};
+
+void throw(int error){
+	size_t num_msg = sizeof(errors)/sizeof(errors[0]);
+	int error_index = -error - 1;
+
+	// Check if the error is custom or not.
+	// +ve values for system errors, -ve values for custom errors.
+	if ((error_index < num_msg) && (error_index >= 0)){
+		fprintf(stderr, "Error: %s\n", errors[error_index]);
+	} else {
+		// If it is a global error use the builtin error handling.
+		errno = error;
+		perror("Error");
+	}
+}
+```
+
+On top of this refactoring of the error handling system I added a couple more functions. Critically, I added a way to export and playback wav files so I can more easily debug and verify that the `read_wav` function was correctly functioning. Unsurprisingly, I called this function `export_WAVE`, which takes a pointer to a wav object and writes it to a file, header and all. Here is that function:
+
+```C
+int export_WAVE(WAVE *wav){
+	char *wav_header = malloc(44);
+	if (!wav_header) return errno;
+	// Write a scaffold of the data to memory.
+	memcpy(wav_header, "RIFF    WAVEfmt                     data", 40);
+
+	// Populate empty parts
+	((int32_t *)wav_header)[1] = 36 + (wav->num_samples)*(wav->num_channels)*(wav->bits_per_sample/8);
+	((int32_t *)wav_header)[4] = 16;
+	((int16_t *)wav_header)[10] = 1;
+	((int16_t *)wav_header)[11] = wav->num_channels;
+	((int32_t *)wav_header)[6] = wav->sample_rate;
+	((int32_t *)wav_header)[7] = (wav->sample_rate)*(wav->num_channels)*(wav->bits_per_sample/8);
+	((int16_t *)wav_header)[16] = (wav->num_channels)*(wav->bits_per_sample/8);
+	((int16_t *)wav_header)[17] = wav->bits_per_sample;
+	((int32_t *)wav_header)[10] = (wav->num_samples)*(wav->num_channels)*(wav->bits_per_sample/8);
+
+	// Write to the file.
+	FILE *fp = fopen (wav->name, "wb");
+	if (!fp) return errno;
+	fwrite(wav_header, 1, 44, fp);
+	fwrite(wav->data, 1, (wav->num_samples)*(wav->num_channels)*sizeof(int16_t), fp);
+	fclose(fp);
+
+	// Free up unused memory.
+	free(wav_header);
+
+	// Return a success.
+	return 0;
+}
+```
+
+I also added another helper function `float_to_raw` which takes in an array of arrays of floats and interleaves it back as 16 bit multi-channel audio data as per the wav file specifications.
+
+```C
+// 16 bit WAV export supported only because I'm lazy.
+char *float_to_raw(int num_samples, int num_channels, float **data){
+	int16_t *ret = malloc(num_samples*num_channels*sizeof(int16_t));
+	if (!ret) return NULL;
+
+	for (int i = 0; i < num_samples; ++i){
+		for (int j = 0; j < num_channels; ++j){
+			ret[num_channels*i + j] = 32767*data[j][i];
+		}
+	}
+	return (char *)ret;
+}
+```
+
+
+
+In addition to these two funcitons, I added another function which allows me to dump the raw data out to `stdout` so I could run it with a program that can take raw data and play it to check if it works such as `aplay`. This function looks like this:
+
+```C
+// Terrible function for checking the validity of my read function
+void playback(WAVE *wav){
+	int num_bytes = (wav->num_channels)*(wav->num_samples)*(wav->bits_per_sample)/8;
+	fwrite(wav->data,1,num_bytes,stdout);
+}
+```
+
+I ran it with a little bit of custom jank with the `main` function and it worked perfect as expected:
+
+```C
+int main(int argc, char *argv[]){
+	// Have we supplied an argument?
+	if (argc >= 2) {
+		WAVE *wav = read_wav(argv[1]);
+
+		if (wav == NULL){
+			throw(errno);
+			return errno;
+		}
+
+		float *data_float_c0 = WAVE_to_float(wav, 0);
+		float *data_float_c1 = WAVE_to_float(wav, 1);
+
+		float *channel_data[] = {data_float_c0,data_float_c1};
+
+		sort_audio(wav->num_samples, data_float_c0);
+		sort_audio(wav->num_samples, data_float_c1);
+		
+		char *raw_data = float_to_raw(wav->num_samples,wav->num_channels,channel_data);
+
+		free(data_float_c0);
+		free(data_float_c1);
+
+		WAVE converted;
+
+		converted.name = "./test.wav";
+		converted.num_channels = 2;
+		converted.sample_rate = wav->sample_rate;
+		converted.bits_per_sample = 16;
+		converted.num_samples = wav->num_samples;
+		converted.base_ptr = raw_data;
+		converted.data = raw_data;
+
+		int err = export_WAVE(&converted);
+		if (err){
+			throw(err);
+			return err;
+		}
+
+		debug_WAVE(&converted);
+
+		destroy_WAVE(wav);
+		free(converted.base_ptr);
+	}
+	// If we haven't supplied an argument print the help.
+	else {
+		printf("Usage: process [OPTION] ... SOURCE DEST\n");
+	}
+}
+```
+
+Of course, this `main` function is getting unwieldy. I need to make this processing apply to a more general gamut of wav files and also take this code out of `main` and put it into `process_audio`. That's a job for next time however.
+
+### 22/06/2020
+
+From the last time I made an entry, I added a few things. Firstly I added two more audio processing functions on top of `qsort`. I added `sqrt` and `reverse`. Secondly, I refactored and generalised a lot of the functionality of my program in a big way. I would consider my program now feature complete. I moved a lot of my code from `main` to `process_audio` and added support for non-stereo audio. Here's the code here:
+
+```C
+// wav_in must have same basic metadata as wav_out.
+int process_audio(WAVE *wav_in, WAVE *wav_out, int function){
+	float **data_f = malloc(sizeof(float*) * wav_in->num_channels);
+
+	for (int i = 0; i < wav_in->num_channels; ++i){
+		data_f[i] = WAVE_to_float(wav_in, i);
+		if (data_f[i] == NULL){
+			return errno;
+		}
+		function_table[function](wav_in->num_samples, data_f[i]);
+	}
+	
+	char *raw_data = float_to_raw(wav_in->num_samples, wav_in->num_channels, data_f);
+	if (raw_data == NULL){
+		return errno;
+	}
+
+	for (int i = 0; i < wav_in->num_channels; ++i){
+		free (data_f[i]);
+	}
+	free(data_f);
+
+	wav_out->bits_per_sample = 16;
+	wav_out->num_samples = wav_in->num_samples;
+	wav_out->sample_rate = wav_in->sample_rate;
+	wav_out->num_channels = wav_in->num_channels;
+	wav_out->base_ptr = raw_data;
+	wav_out->data = raw_data;
+
+	return 0;
+}
+```
+
+I had a little bit of trouble with memory allocation but it turned out okay in the end. `valgrind` was a godsend in this situation. It is a debugger which lets you know about erroneous memory accesses and memory leaks. It was easy to use and it helped me find various bugs which completely broke the program. Perhaps most hilariously, the title of the output files were a garbled mess because I set the name of the output file after writing it to disk. `valgrind` let me know that this was the problem with the program and for that I am forever grateful for making my program less memory intensive and bug-free.
+
+I yet again updated the main function to run the full flow of the program as set by the DFD and structure chart:
+
+```C
+int main(int argc, char *argv[]){
+	// Have we supplied an argument?
+	if (argc == 4) {
+
+		// Read the WAVE file out
+		WAVE *wav = read_wav(argv[2]);
+		if (wav == NULL){
+			throw(errno);
+			return errno;
+		}
+
+		// Create the output WAVE struct
+		WAVE *wav_out = malloc(sizeof(WAVE));
+		if (wav_out == NULL){
+			throw(errno);
+			return errno;
+		}
+
+		// Set the name of the struct to the input
+		wav_out->name = argv[3];
+
+		// Convert the input string into an integer
+		int function_index = atoi(argv[1]);
+		
+		// If it's too big complain and exit
+		if (function_index > 4 || function_index <= 0){
+			throw(-3);
+			return -3;
+		}
+
+		// Do the action to the audio
+		int err = process_audio(wav, wav_out, function_index - 1);
+		if (err != 0){
+			throw(err);
+			return err;
+		}
+
+		// Write the audio to disk
+		err = export_WAVE(wav_out);
+		if (err != 0){
+			throw(err);
+			return err;
+		}
+
+		// Clear all memory before quitting.
+		destroy_WAVE (wav);
+		destroy_WAVE (wav_out);
+	}
+
+	// If we haven't supplied an argument print the help.
+	else {
+		printf("Usage: %s ACTION SOURCE DEST\n"
+			   "Possible values for ACTION:\n"
+			   "    1: quicksort the data\n"
+			   "    2: sqrt the data\n"
+			   "    3: reverse the data\n"
+			   "    4: make the data all steppy and weird\n"
+			   "Example: %s 1 in.wav out.wav\n", argv[0], argv[0]);
+	}
+}
+```
+
+It also prints a helpful help dialogue when the user doesn't put the right number of arguments in (which means all the usual ways to invoke the help of a command line program work, such as ./program --help, as this only has one argument). I thought that was a useful interface design.
+
+### 23/06/2020
+
+Last entry. All I did was add an extra piece of functionality and cleaned up the code a bit. Nothing significant since my last edit. Here's an excerpt of the `step` function:
+
+```C
+void step(int num_samples, float *data){
+	for (int i = 0; i < num_samples; ++i){
+		data[i] = ((int)(16*data[i]))/16.0;
+	}
+}
+```
 
 # Testing and Evaluation of Software Solutions
 
@@ -232,7 +613,7 @@ void debug_WAVE(WAVE *wav){
 }
 ```
 
-**Original:**
+**Original**
 
 <audio controls="controls">
 	<source type="audio/wav" src="audio/test.wav"></source>
@@ -244,21 +625,18 @@ void debug_WAVE(WAVE *wav){
 	<source type="audio/wav" src="audio/sqrt.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
-
 **Reverse**
 
 <audio controls="controls">
 	<source type="audio/wav" src="audio/reverse.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
-
 **Quicksort** (it is expected that it sounds like nothing)
 
 <audio controls="controls">
 	<source type="audio/wav" src="audio/qsort.wav"></source>
 	<p>Your browser does not support the audio element.</p>
 </audio>
-
 **Step**
 
 <audio controls="controls">
