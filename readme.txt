@@ -23,3 +23,7 @@ Fire up a terminal, run:
 Start up cmd (windows key + R, cmd, enter) and navigate to the directory with Wavver in it and run:
 
 wavver.exe 1 in.wav out.wav
+
+-- Test files --
+
+If you need some wav files to test this software with try these: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Samples.html
