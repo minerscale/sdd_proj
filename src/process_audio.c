@@ -176,35 +176,3 @@ void debug_WAVE(WAVE *wav){
 	printf ("bits_per_sample: %d\n", wav->bits_per_sample);
 	printf ("num_samples: %d\n", wav->num_samples);
 }
-
-// wav_in must have same basic metadata as wav_out.
-int process_audio(WAVE *wav_in, WAVE *wav_out, int function){
-	float **data_f = malloc(sizeof(float*) * wav_in->num_channels);
-
-	for (int i = 0; i < wav_in->num_channels; ++i){
-		data_f[i] = WAVE_to_float(wav_in, i);
-		if (data_f[i] == NULL){
-			return errno;
-		}
-		function_table[function](wav_in->num_samples, data_f[i]);
-	}
-	
-	char *raw_data = float_to_raw(wav_in->num_samples, wav_in->num_channels, data_f);
-	if (raw_data == NULL){
-		return errno;
-	}
-
-	for (int i = 0; i < wav_in->num_channels; ++i){
-		free (data_f[i]);
-	}
-	free(data_f);
-
-	wav_out->bits_per_sample = 16;
-	wav_out->num_samples = wav_in->num_samples;
-	wav_out->sample_rate = wav_in->sample_rate;
-	wav_out->num_channels = wav_in->num_channels;
-	wav_out->base_ptr = raw_data;
-	wav_out->data = raw_data;
-
-	return 0;
-}

@@ -1,8 +1,21 @@
 {
-	"folders":
-	[
-		{
-			"path": "."
-		}
-	]
+    "folders":
+    [
+        {
+            "path": "./",
+        }
+    ],
+    "build_systems":
+    [
+        {
+            "name": "run",
+            "shell_cmd": "xfce4-terminal --working-directory=\"$project_path\" -e ./tools/build.sh",
+            "variants": [
+                {
+                    "name": "save",
+                    "shell_cmd": "xfce4-terminal --working-directory=\"$project_path\" -e ./tools/save.sh"
+                }
+            ]
+        }
+    ]
 }
